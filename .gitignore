@@ -1,0 +1,10 @@
+.ionide
+bin
+obj
+sample_parsers
+sample_SIE
+descriptions
+syntax
+tests
+FParsec.dll
+FParsecCS.dll
