@@ -1,33 +1,35 @@
-﻿
 open FParsec
 open System.IO
 open System.Text
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)
-
+ 
 // -------------------------------------------------------------
 
-let ws = many1Satisfy (function ' '|'\t' -> true | _ -> false)
+let ws = many1SatisfyL (function ' '|'\t' -> true | _ -> false) "whiteSpece"
 
-// Parse a lable
-let identifier : Parser<string, unit> =
-    let isIdentifierFirstChar c = c ='#'
-    let isIdentifierChar c = isUpper c
+let id = 
+    let firstChar c = c = '#'
+    let remainingChar c = isUpper c 
 
-    many1Satisfy2L isIdentifierFirstChar isIdentifierChar "identifier" .>> ws// the "identifier" is used in error messages
+    many1Satisfy2L firstChar remainingChar "identifier" .>> ws
 
-let word = many1Satisfy (function ' '|'\t'|'"' -> false | _ -> true)
-let str = stringsSepBy word ws
+let word : Parser<string,unit> =
+    many1SatisfyL (function ' '|'"'|'\n' -> false | _ -> true) "word"
+
+let str =
+    between (pchar '"') (pchar '"') (stringsSepBy word ws)
 
 let value = 
-    choice [pstring "\"\"" 
-            between (pstring "\"") (pstring "\"") str 
-            word ] .>> ws
+    choiceL [str;
+             word] "value" .>> optional ws
 
-let item = identifier .>>. many1 value .>> newline
+let item =
+    id .>>. many1 value .>> newline
 
-// run 'item' until eof
-let SIE = many1 item .>> eof
+
+let SIE =
+    many1 item .>> eof
 
 // -------------------------------------------------------------
 
